@@ -144,6 +144,33 @@ class Seed(Enum):
         """
         return self.name
 
+    def __hash__(self):
+        """
+        Returns the hash value of the Seed instance.
+
+        Returns:
+            int: The hash value of the Seed instance.
+
+        Example:
+            >>> hash(Seed.spades)
+            1
+        """
+        return hash(self.value)
+
+    @property
+    def notation(self) -> str:
+        """
+        Returns the notation string of the Seed instance.
+
+        Returns:
+            str: The notation string of the Seed instance.
+
+        Example:
+            >>> Seed.spades.notation
+            's'
+        """
+        return Seed.value_to_notation(self.value)
+
     @classmethod
     def value_to_notation(cls, value: int) -> str:
         """
@@ -195,7 +222,8 @@ class Seed(Enum):
         try:
             return notation_map[text]
         except KeyError:
-            raise ValueError(f"No Seed found for notation: {text}")
+            raise ValueError(f"Invalid notation: {text}")
+
 
 class Card:
     """
@@ -244,7 +272,10 @@ class Card:
         return f"{self.number} of {self.seed.name}"
         
     def __str__(self):
-        return f"{self.number} of {self.seed.name}"
+        return self.__repr__()
+
+    def __hash__(self):
+        return hash((self.seed, self.number))
 
     @classmethod
     def tarot_name(cls, number: int) -> str:
@@ -272,7 +303,6 @@ class Card:
                 20: "The Judgement",
                 21: "The World"
             }
-
         return tarot_names.get(number, "Unknown")
 
 
@@ -307,9 +337,9 @@ class Card:
 
         seed = rnd.choice(list(Seed))
         if seed == Seed.tarots:
-            number = rnd.randint(0,21)
+            number = rnd.randint(0, 21)
         else:
-            number = rnd.randint(1,14)     
+            number = rnd.randint(1, 14)
         return Card(seed, number)
        
     def __eq__(self, other: Card) -> bool:
@@ -474,9 +504,7 @@ class Card:
             return 12
         
         if self.seed == Seed.tarots: #if the card is a tarot
-            if number in [1,20]: #if the card is the magician or the world
-                return 5*3 - 2
-            return 1
+            return 13 if number in [1, 21] else 1
         
         if number > 10: #if the card is a figure
                 return (number - 9)*3 - 2
@@ -567,10 +595,16 @@ class Hand:
             >>> hand2 = Hand([Card(Seed.coins, 12), Card(Seed.clubs, 11), Card(Seed.spades, 1)])
             >>> combined_hand = hand1 + hand2
             >>> print(combined_hand.cards)
-        []
+            [1 of spades, 13 of cups, 12 of coins, 11 of clubs]
         """
-
-        return Hand(list(set(self.cards+other.cards)))
+        new_cards = self.cards + other.cards
+        unique_cards = []
+        seen = set()
+        for card in new_cards:
+            if (card.seed, card.number) not in seen:
+                unique_cards.append(card)
+                seen.add((card.seed, card.number))
+        return Hand(unique_cards)
 
     def __iter__(self):
         return iter(self.cards)
@@ -586,6 +620,9 @@ class Hand:
 
     def __delitem__(self, key):
         del self.cards[key]
+ 
+    def __hash__(self):
+        return hash(tuple(self.cards))
 
     @classmethod
     def random(cls, num: int) -> Hand:
@@ -604,11 +641,10 @@ class Hand:
         """
 
         cards = []
-        for _ in range(num):
-            card = Card.random() #generate a random card
-            while card in cards: #check if the card is already in the list
-                card = Card.random() #generate a new card
-            cards.append(card) #add the card to the list
+        while len(cards) < num:
+            card = Card.random()
+            if card not in cards:
+                cards.append(card)
         return Hand(cards)
 
     def cards_of_seed(self, seed: Seed) -> Hand:
@@ -816,16 +852,9 @@ class Hand:
             >>> print(groups)
             {Seed.spades: [1 of spades, 5 of spades], Seed.cups: [13 of cups]}
         """
-        groups = {seed.value: [] for seed in Seed}
-
-        if not self.cards:
-            return groups
+        groups = {seed: [] for seed in Seed}
         for card in self.cards:
-            groups[card.seed.value].append(card)
-
-        for key, value in groups.items():
-            value.sort()
-            groups[key] = value
+            groups[card.seed].append(card)
         return groups
     
     @property
@@ -841,32 +870,14 @@ class Hand:
             's:[[1, 5], [13]]\nc:[[13]]\n'
         """
         if not self.cards:
-            return "empty hand"
+            return ""
         
         groups = self.group_cards
 
         text = ""
-        for key,cards in groups.items():
-            numbers = [card.number for card in cards]
-            numbers.sort()
-            interval = []
-            starting_num = numbers[0]
-            ending_num = numbers[0]
-            
-            for num in numbers[1:]:
-                if num == ending_num + 1:
-                    ending_num = num
-                else:
-                    interval.append([starting_num, ending_num])
-                    starting_num = num
-                    ending_num = num
-            
-            interval.append([starting_num, ending_num])
-            
-            # Converti intervalli singoli in numeri singoli
-            interval= [ [starting_number, ending_number] if starting_number != ending_number else [starting_number] for starting_number, ending_number in interval ]
-            key_notation = Seed.value_to_notation(key)
-            text += f"{key_notation}:{interval}\n"        
+        for seed, cards in groups.items():
+            if cards:
+                text += f"{seed.notation}:[{', '.join(str(card.number) for card in cards)}]\n"
         return text
 
     @classmethod
@@ -923,6 +934,30 @@ class Hand:
             True
         """
         return not bool(self.cards)
+
+    def sort(self) -> Hand:
+        """
+        Return a new Hand with the cards sorted in descending order.
+        Returns:
+            Hand: A new Hand with the cards sorted in descending order.
+        Example:
+            >>> hand = Hand([Card(Seed.spades, 1), Card(Seed.cups, 13), Card(Seed.spades, 5)])
+            >>> sorted_hand = hand.sorted()
+            >>> print(sorted_hand)
+            [13 of cups, 5 of spades, 1 of spades]
+        """
+        return Hand(sorted(self.cards, reverse=True))   
+
+    def clear(self) -> None:
+        """
+        Remove all cards from the hand.
+        Example:
+        >>> hand = Hand([Card(Seed.spades, 1), Card(Seed.cups, 13), Card(Seed.spades, 5)])
+        >>> hand.clear()
+        >>> print(hand)
+        []
+        """
+        self.cards.clear()
 
 class Deck:
     """
@@ -1041,6 +1076,84 @@ class Deck:
             return self.cards == other.cards
         return False
 
+    def __ne__(self, other: Deck) -> bool:
+        """
+        Check if two decks are not equal.
+        Args:
+            other (Deck): The other deck to compare against.
+        Returns:
+            bool: True if the decks are not equal, False otherwise.
+        Example:
+            >>> deck1 = Deck.standard()
+            >>> deck2 = Deck.standard()
+            >>> deck1 != deck2
+            False
+        """
+        return not self.__eq__(other)
+    
+    def __lt__(self, other: Deck) -> bool:
+        """
+        Check if this deck is less than another deck.
+        Args:
+            other (Deck): The other deck to compare against.
+        Returns:
+            bool: True if this deck is less than the other deck, False otherwise.
+        Example:
+            >>> deck1 = Deck.standard()
+            >>> deck2 = Deck.standard()
+            >>> deck1 < deck2
+            False
+        """
+        return self.cards < other.cards
+    
+    def __le__(self, other: Deck) -> bool:
+        """
+        Check if this deck is less than or equal to another deck.
+        Args:
+            other (Deck): The other deck to compare against.
+        Returns:
+            bool: True if this deck is less than or equal to the other deck, False otherwise.
+        Example:
+            >>> deck1 = Deck.standard()
+            >>> deck2 = Deck.standard()
+            >>> deck1 <= deck2
+            True
+        """
+        return self.__lt__(other) or self.__eq__(other)
+    
+    def __gt__(self, other: Deck) -> bool:
+        """
+        Check if this deck is greater than another deck.
+        Args:
+            other (Deck): The other deck to compare against.
+        Returns:
+            bool: True if this deck is greater than the other deck, False otherwise.
+        Example:
+            >>> deck1 = Deck.standard()
+            >>> deck2 = Deck.standard()
+            >>> deck1 > deck2
+            False
+        """
+        return not self.__le__(other)
+    
+    def __ge__(self, other: Deck) -> bool:
+        """
+        Check if this deck is greater than or equal to another deck.
+        Args:
+            other (Deck): The other deck to compare against.
+        Returns:
+            bool: True if this deck is greater than or equal to the other deck, False otherwise.
+        Example:
+            >>> deck1 = Deck.standard()
+            >>> deck2 = Deck.standard()
+            >>> deck1 >= deck2
+            True
+        """
+        return not self.__lt__(other)
+    
+    def __hash__(self):
+        return hash(tuple(self.cards))
+
     @classmethod
     def standard(cls) -> Deck:
         """
@@ -1057,11 +1170,9 @@ class Deck:
         for seed in Seed:
 
             if seed == Seed.tarots:
-                for number in range(0,22):
-                    cards.append(Card(seed, number))
+                cards.extend([Card(seed, number) for number in range(22)])
             else:
-                for number in range(1,15):
-                    cards.append(Card(seed, number))
+                cards.extend([Card(seed, number) for number in range(1, 15)])
         return Deck(cards)
     
     def shuffle(self):
@@ -1094,6 +1205,7 @@ class Deck:
 
         drawn = self.cards[:num]
         self.cards = self.cards[num:]
+        
         return drawn
 
     def draw_card(self) -> Card:
@@ -1142,7 +1254,7 @@ class Deck:
 
         return self.draw(num)
 
-    def deal(self, num_players: int) -> list[list[Hand],list[Card]]:
+    def deal(self, num_players: int) -> tuple[list[Hand], Hand]:
         """
         Deal cards to a specified number of players.
         This method deals cards to a specified number of players and returns the hands and the prize.
@@ -1171,8 +1283,7 @@ class Deck:
             prize_draw = 3
             initial_draw = 5
 
-        prize = self.shuffle_draw(prize_draw) #draw the prize
-        prize = Hand(prize) #prize is a hand
+        prize = self.draw_hand(prize_draw) #draw the prize
         hands = [self.draw_hand(initial_draw) for _ in range(num_players)] #draw the initial
 
         #draw 5 cards per player until the deck is empty
@@ -1195,16 +1306,9 @@ class Deck:
             {Seed.spades: [1 of spades, 2 of spades, ..., 14 of spades], Seed.cups: [1 of cups, 2 of cups, ..., 14 of cups], ...}
         """
 
-        groups = {seed.value: [] for seed in Seed}
-        if not self.cards:
-            return {}
-        
+        groups = {seed: [] for seed in Seed}
         for card in self.cards:
-            groups[card.seed.value].append(card)
-
-        for key, value in groups.items():
-            value.sort()
-            groups[key] = value
+            groups[card.seed].append(card)
         return groups
     
     @property
@@ -1221,32 +1325,14 @@ class Deck:
         """
 
         if not self.cards:
-            return "empty deck"
+            return ""
 
         groups = self.group_cards
 
         text = ""
-        for key,cards in groups.items():
-            numbers = [card.number for card in cards]
-            numbers.sort()
-            interval = []
-            starting_num = numbers[0]
-            ending_num = numbers[0]
-            
-            for num in numbers[1:]:
-                if num == ending_num + 1:
-                    ending_num = num
-                else:
-                    interval.append([starting_num, ending_num])
-                    starting_num = num
-                    ending_num = num
-            
-            interval.append([starting_num, ending_num])
-            
-            # Converti intervalli singoli in numeri singoli
-            interval= [ [starting_number, ending_number] if starting_number != ending_number else [starting_number] for starting_number, ending_number in interval ]
-            key_notation = Seed.value_to_notation(key)
-            text += f"{key_notation}:{interval}\n"        
+        for seed, cards in groups.items():
+            if cards:
+                text += f"{seed.notation}:[{', '.join(str(card.number) for card in cards)}]\n"
         return text
 
     @classmethod
@@ -1418,9 +1504,32 @@ class Deck:
             >>> print(reversed_deck)
             [1 of spades, 13 of cups]
         """
-        return Deck(reversed(self.cards))
+        return Deck(list(reversed(self.cards)))
     
+    def sort(self) -> None:
+        """
+        Sort the cards in the deck.
+        This method sorts the cards in the deck in ascending order.
+        Example:
+        >>> deck = Deck([Card(Seed.spades, 1), Card(Seed.cups, 13)])
+        >>> deck.sort()
+        >>> print(deck)
+        [1 of spades, 13 of cups]
+        """
+        self.cards.sort()
 
+    def clear(self) -> None:
+        """
+        Remove all cards from the deck.
+        Example:
+        >>> deck = Deck([Card(Seed.spades, 1), Card(Seed.cups, 13)])
+        >>> deck.clear()
+        >>> print(deck)
+        []
+        """
+        self.cards.clear()
+       
+        
 class Player:
     """
     A class representing a player in a card game.
@@ -1526,6 +1635,112 @@ class Player:
 
     def __delitem__(self, key):
         del self.hand[key]
+
+    def __eq__(self, other: Player) -> bool:
+        """
+        Check if two players are equal. 
+        Args:
+            other (Player): The other player to compare against.
+        Returns:
+            bool: True if the players are equal, False otherwise.
+        Example:
+            >>> player1 = Player("Alice")
+            >>> player2 = Player("Bob")
+            >>> player1.score = 10
+            >>> player2.score = 10
+            >>> player1 == player2
+            True
+        """
+        return self.score == other.score
+
+    def __ne__(self, other: Player) -> bool:
+        """
+        Check if two players are not equal.
+        Args:
+            other (Player): The other player to compare against.
+        Returns:
+            bool: True if the players are not equal, False otherwise.
+        Example:
+            >>> player1 = Player("Alice")
+            >>> player2 = Player("Bob")
+            >>> player1.score = 10
+            >>> player2.score = 20
+            >>> player1 != player2
+            True
+        """
+        return not self.__eq__(other)
+    
+    def __lt__(self, other: Player) -> bool:
+        """
+        Check if this player is less than another player.
+        Args:
+            other (Player): The other player to compare against.
+        Returns:
+            bool: True if this player is less than the other player, False otherwise.
+        Example:
+            >>> player1 = Player("Alice")
+            >>> player2 = Player("Bob")
+            >>> player1.score = 10
+            >>> player2.score = 20
+            >>> player1 < player2
+            True
+        """
+        return self.score < other.score
+
+    def __le__(self, other: Player) -> bool:
+        """
+        Check if this player is less than or equal to another player.
+        Args:
+            other (Player): The other player to compare against.
+        Returns:
+            bool: True if this player is less than or equal to the other player, False otherwise.
+        Example:
+            >>> player1 = Player("Alice")
+            >>> player2 = Player("Bob")
+            >>> player1.score = 10
+            >>> player2.score = 20
+            >>> player1 <= player2
+            True
+        """
+        return self.__lt__(other) or self.__eq__(other)
+    
+    def __gt__(self, other: Player) -> bool:
+        """
+        Check if this player is greater than another player.
+        Args:
+            other (Player): The other player to compare against.
+        Returns:
+            bool: True if this player is greater than the other player, False otherwise.
+        Example:
+            >>> player1 = Player("Alice")
+            >>> player2 = Player("Bob")
+            >>> player1.score = 10
+            >>> player2.score = 20
+            >>> player1 > player2
+            False
+        """
+        return not self.__le__(other)
+    
+    def __ge__(self, other: Player) -> bool:
+        """
+        Check if this player is greater than or equal to another player.
+        Args:
+            other (Player): The other player to compare against.
+        Returns:
+            bool: True if this player is greater than or equal to the other player, False otherwise.
+        Example:
+            >>> player1 = Player("Alice")
+            >>> player2 = Player("Bob")
+            >>> player1.score = 10
+            >>> player2.score = 20
+            >>> player1 >= player2
+            False
+        """
+        return not self.__lt__(other)
+    
+    def __hash__(self):
+        return hash(self.name)
+
 
     def add_card(self, card: Card) -> None:
         """
@@ -1649,7 +1864,7 @@ class Player:
 
         return self.hand.has_seeds(seeds)
 
-    def reset_hand(self) -> None:
+    def clear_hand(self) -> None:
         """
         Reset the player's hand to an empty hand.
         Example:
@@ -2029,6 +2244,8 @@ class Player:
         """
         return self.hand.is_empty
 
+    
+
 class PlayedCard(Card):
     """
     A class representing a card played by a player.
@@ -2194,6 +2411,9 @@ class PlayedCard(Card):
         """
 
         return not self.__lt__(other)
+
+    def __hash__(self):
+        return hash(self.card)
 
     @classmethod
     def from_card(cls, card: Card, order: int, owner: Player = Player.placeholder()) -> PlayedCard:
@@ -2992,10 +3212,14 @@ class Team:
             >>> print(team)
             'the team is composed of:\nAlice'
         """
-
+        print(f"player to remove {player}")
+        print(f"players in team {self.players}")
         self.players.remove(player)
+        print(f"players in team {self.players}")
 
-    def remove_playerss(self, players: List[Player]) -> None:
+        return None
+
+    def remove_players(self, players: List[Player]) -> None:
         """
         Remove multiple players from the team.
         Args:
@@ -3849,7 +4073,7 @@ class Game:
 
         for player in self.players:
             player.won_cards = player.hand
-            player.reset_hand()
+            player.clear_hand()
         self.update_team_won_cards()
         self.update_players_won_cards()
         self.update_score()

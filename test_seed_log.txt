@@ -1,0 +1,10 @@
+test_comparison (__main__.TestSeed) ... ok
+test_from_notation (__main__.TestSeed) ... ok
+test_repr (__main__.TestSeed) ... ok
+test_str (__main__.TestSeed) ... ok
+test_value_to_notation (__main__.TestSeed) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.000s
+
+OK

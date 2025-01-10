@@ -11,6 +11,20 @@ class TestSeed(unittest.TestCase):
         self.assertTrue(Seed.spades == Seed.spades)
         self.assertTrue(Seed.spades != Seed.coins)
 
+    def test_value(self):
+        self.assertEqual(Seed.tarots.value, 0)
+        self.assertEqual(Seed.spades.value, 1)
+        self.assertEqual(Seed.coins.value, 2)
+        self.assertEqual(Seed.clubs.value, 3)
+        self.assertEqual(Seed.cups.value, 4)
+
+    def test_notation(self):
+        self.assertEqual(Seed.spades.notation, 's')
+        self.assertEqual(Seed.tarots.notation, 't')
+        self.assertEqual(Seed.coins.notation, 'o')
+        self.assertEqual(Seed.clubs.notation, 'c')
+        self.assertEqual(Seed.cups.notation, 'u')
+
     def test_value_to_notation(self):
         self.assertEqual(Seed.value_to_notation(1), 's')
         self.assertEqual(Seed.value_to_notation(0), 't')
@@ -37,9 +51,7 @@ class TestSeed(unittest.TestCase):
         self.assertEqual(repr(Seed.tarots), 'tarots')
 
 def main():
-    with open('test_seed_log.txt', 'w') as f:
-        runner = unittest.TextTestRunner(stream=f, verbosity=2)
-        unittest.main(testRunner=runner, exit=False)
+    unittest.main()
 
 if __name__ == '__main__':
     main()

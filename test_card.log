@@ -1,0 +1,75 @@
+2025-01-09 12:24:57,894 - INFO - Setup Card: 0 of tarots
+2025-01-09 12:24:57,894 - INFO - Test Card Equality: 0 of tarots == 0 of tarots
+2025-01-09 12:24:57,894 - INFO - Setup Card: 0 of tarots
+2025-01-09 12:24:57,894 - INFO - Test Card Greater Than: 1 of tarots > 0 of tarots
+2025-01-09 12:24:57,894 - INFO - Setup Card: 0 of tarots
+2025-01-09 12:24:57,894 - INFO - Test Card Greater Than Or Equal: 1 of tarots >= 0 of tarots
+2025-01-09 12:24:57,894 - INFO - Setup Card: 0 of tarots
+2025-01-09 12:24:57,894 - INFO - Test Card Inequality: 0 of tarots != 1 of tarots
+2025-01-09 12:24:57,894 - INFO - Setup Card: 0 of tarots
+2025-01-09 12:24:57,894 - INFO - Test Card Less Than: 0 of tarots < 1 of tarots
+2025-01-09 12:24:57,894 - INFO - Setup Card: 0 of tarots
+2025-01-09 12:24:57,894 - INFO - Test Card Less Than Or Equal: 0 of tarots <= 1 of tarots
+2025-01-09 12:24:57,894 - INFO - Setup Card: 0 of tarots
+2025-01-09 12:24:57,895 - INFO - Setup Card: 0 of tarots
+2025-01-09 12:24:57,895 - INFO - Test Card Number: 0
+2025-01-09 12:24:57,895 - INFO - Setup Card: 0 of tarots
+2025-01-09 12:24:57,895 - INFO - Test Card Random: 15 of tarots
+2025-01-09 12:24:57,895 - INFO - Setup Card: 0 of tarots
+2025-01-09 12:24:57,895 - INFO - Test Card Repr: 0: The Fool
+2025-01-09 12:24:57,895 - INFO - Setup Card: 0 of tarots
+2025-01-09 12:24:57,895 - INFO - Test Card Seed: tarots
+2025-01-09 12:24:57,895 - INFO - Setup Card: 0 of tarots
+2025-01-09 12:24:57,895 - INFO - Setup Card: 0 of tarots
+2025-01-09 12:24:57,895 - INFO - Test Card Value: 12
+2025-01-09 12:26:20,654 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:26:20,655 - INFO - Test Card Equality: 0: The Fool == 0: The Fool
+2025-01-09 12:26:20,655 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:26:20,655 - INFO - Test Card Greater Than: 1: The Magician > 0: The Fool
+2025-01-09 12:26:20,655 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:26:20,655 - INFO - Test Card Greater Than Or Equal: 1: The Magician >= 0: The Fool
+2025-01-09 12:26:20,655 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:26:20,655 - INFO - Test Card Inequality: 0: The Fool != 1: The Magician
+2025-01-09 12:26:20,655 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:26:20,655 - INFO - Test Card Less Than: 0: The Fool < 1: The Magician
+2025-01-09 12:26:20,655 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:26:20,655 - INFO - Test Card Less Than Or Equal: 0: The Fool <= 1: The Magician
+2025-01-09 12:26:20,655 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:26:20,655 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:26:20,656 - INFO - Test Card Number: 0
+2025-01-09 12:26:20,656 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:26:20,656 - INFO - Test Card Random: 2 of clubs
+2025-01-09 12:26:20,656 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:26:20,656 - INFO - Test Card Repr: 0: The Fool
+2025-01-09 12:26:20,656 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:26:20,656 - INFO - Test Card Seed: tarots
+2025-01-09 12:26:20,656 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:26:20,656 - INFO - Test Card Str: 0: The Fool
+2025-01-09 12:26:20,656 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:26:20,656 - INFO - Test Card Value: 12
+2025-01-09 12:29:35,993 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:29:35,993 - INFO - Test Card Equality: 0: The Fool == 0: The Fool
+2025-01-09 12:29:35,993 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:29:35,993 - INFO - Test Card Greater Than: 1: The Magician > 0: The Fool
+2025-01-09 12:29:35,993 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:29:35,993 - INFO - Test Card Greater Than Or Equal: 1: The Magician >= 0: The Fool
+2025-01-09 12:29:35,993 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:29:35,994 - INFO - Test Card Inequality: 0: The Fool != 1: The Magician
+2025-01-09 12:29:35,994 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:29:35,994 - INFO - Test Card Less Than: 0: The Fool < 1: The Magician
+2025-01-09 12:29:35,994 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:29:35,994 - INFO - Test Card Less Than Or Equal: 0: The Fool <= 1: The Magician
+2025-01-09 12:29:35,994 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:29:35,994 - INFO - Test Card Notation: 5s
+2025-01-09 12:29:35,994 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:29:35,994 - INFO - Test Card Number: 0
+2025-01-09 12:29:35,994 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:29:35,994 - INFO - Test Card Random: Jack of coins
+2025-01-09 12:29:35,994 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:29:35,994 - INFO - Test Card Repr: 0: The Fool
+2025-01-09 12:29:35,994 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:29:35,994 - INFO - Test Card Seed: tarots
+2025-01-09 12:29:35,994 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:29:35,994 - INFO - Test Card Str: 0: The Fool
+2025-01-09 12:29:35,994 - INFO - Setup Card: 0: The Fool
+2025-01-09 12:29:35,994 - INFO - Test Card Value: 12
