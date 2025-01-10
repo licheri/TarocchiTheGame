@@ -94,7 +94,7 @@ class Seed(Enum):
             other (Seed): The other Seed instance to compare with.
 
         Returns:
-            bool: True if the current Seed instance is equal to the other Seed instance, False otherwise.
+            bool: True if the current Seed instance is equal to the value of another Seed instance, False otherwise.
 
         Example:
             >>> Seed.spades == Seed.spades
@@ -1905,32 +1905,31 @@ class Player:
 
         return self.hand.value
     
-    def choose_card(self) -> Card:
+    def choose_card(self, available_cards: list[Card]) -> Card:
         """
-        Choose a card.
+        Choose a card from the available cards.
+        Args:
+            available_cards (list[Card]): The list of available cards to choose from.
         Returns:
-            Card: The card chosen.
-        Example:
-            >>> player = Player("Alice", Hand([Card(Seed.spades, 1), Card(Seed.cups, 13)])
-            >>> card = player.choose_card()
-            >>> print(card)
-            1 of spades
+            Card: The chosen card.
         """
-        return Card.random()
+        print("Choose a card from the available cards:")
+        for idx, card in enumerate(available_cards):
+            print(f"{idx + 1}: {card}")
+        choice = int(input("Enter the number of the card you want to choose: ")) - 1
+        return available_cards[choice]
 
     def choose_own_card(self) -> Card:
         """
         Choose a card from the player's hand.
         Returns:
-            Card: The card chosen from the player's hand.
-        Example:
-            >>> player = Player("Alice", Hand([Card(Seed.spades, 1), Card(Seed.cups, 13)])
-            >>> card = player.choose_own_card()
-            >>> print(card)
-            1 of spades
+            Card: The chosen card.
         """
-
-        return rnd.choice(self.hand)
+        print("Choose a card from your hand:")
+        for idx, card in enumerate(self.hand.cards):
+            print(f"{idx + 1}: {card}")
+        choice = int(input("Enter the number of the card you want to choose: ")) - 1
+        return self.hand.cards[choice]
 
     def choice_bool(self) -> bool:
         """
