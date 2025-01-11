@@ -25,13 +25,16 @@ class TestPlayedCard(unittest.TestCase):
         self.assertEqual(self.played_card_1, self.played_card_1)
 
     def test_playedcard_inequality(self):
-        self.assertNotEqual(self.played_card_1, self.played_card_2)
+        other_card = PlayedCard.from_card(Card(Seed.tarots, 1), 1, self.player_1)
+        self.assertNotEqual(self.played_card_1, other_card)
 
     def test_playedcard_less_than(self):
-        self.assertLess(self.played_card_1, self.played_card_2)
+        other_card = PlayedCard.from_card(Card(Seed.tarots, 1), 1, self.player_1)
+        self.assertLess(self.played_card_1, other_card)
 
     def test_playedcard_greater_than(self):
-        self.assertGreater(self.played_card_2, self.played_card_1)
+        other_card = PlayedCard.from_card(Card(Seed.tarots, 1), 1, self.player_1)
+        self.assertGreater(other_card, self.played_card_1)
 
 if __name__ == '__main__':
     unittest.main()

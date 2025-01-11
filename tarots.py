@@ -245,7 +245,7 @@ class Card:
         value(): Returns the value of the card.
     """
 
-    def __init__(self, seed: Seed, number):
+    def __init__(self, seed: Seed, number: int):
         self.seed = seed
         self.number = number
 
@@ -342,10 +342,12 @@ class Card:
             number = rnd.randint(1, 14)
         return Card(seed, number)
        
-    def __eq__(self, other: Card) -> bool:
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Card):
+            return NotImplemented
         return self.seed == other.seed and self.number == other.number
 
-    def __ne__(self, other: Card) -> bool:
+    def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
     def __lt__(self, other: Card) -> bool:
@@ -1059,7 +1061,7 @@ class Deck:
     def __delitem__(self, key):
         del self.cards[key]
 
-    def __eq__(self, other: Deck) -> bool:
+    def __eq__(self, other: object) -> bool:
         """
         Check if two decks are equal.
         Args:
@@ -1072,11 +1074,11 @@ class Deck:
             >>> deck1 == deck2
             True
         """
-        if isinstance(other, Deck):
-            return self.cards == other.cards
-        return False
+        if not isinstance(other, Deck):
+            return NotImplemented
+        return self.cards == other.cards
 
-    def __ne__(self, other: Deck) -> bool:
+    def __ne__(self, other: object) -> bool:
         """
         Check if two decks are not equal.
         Args:
@@ -1636,11 +1638,11 @@ class Player:
     def __delitem__(self, key):
         del self.hand[key]
 
-    def __eq__(self, other: Player) -> bool:
+    def __eq__(self, other: object) -> bool:
         """
         Check if two players are equal. 
         Args:
-            other (Player): The other player to compare against.
+            other (object): The other player to compare against.
         Returns:
             bool: True if the players are equal, False otherwise.
         Example:
@@ -1651,9 +1653,11 @@ class Player:
             >>> player1 == player2
             True
         """
-        return self.score == other.score
+        if not isinstance(other, Player):
+            return NotImplemented
+        return self.name == other.name
 
-    def __ne__(self, other: Player) -> bool:
+    def __ne__(self, other: object) -> bool:
         """
         Check if two players are not equal.
         Args:
@@ -1931,6 +1935,23 @@ class Player:
         choice = int(input("Enter the number of the card you want to choose: ")) - 1
         return self.hand.cards[choice]
 
+    def choose_own_card_for_prize(self) -> Card:
+        
+        tarots = [card for card in self.hand.cards if card.seed == Seed.tarots]
+
+        available_cards = [card for card in self.hand.cards if (card.value != 13 or card.seed == Seed.tarots)]
+        available_cards.extend(tarots)
+
+        print("Choose a card from your hand for the prize:")
+        for idx, card in enumerate(available_cards):
+            print(f"{idx + 1}: {card}")
+        choice = int(input("Enter the number of the card you want to choose: ")) - 1
+        return available_cards[choice]
+
+
+
+
+
     def choice_bool(self) -> bool:
         """
         Choose a boolean value.
@@ -2190,7 +2211,7 @@ class Player:
         return [Player(name) for name in name_list]
 
     @classmethod
-    def placeholder(cls, num:int = 1) -> Player|list[Player]:
+    def placeholder(cls, name: str = "placeholder") -> Player:
         """
         Create a placeholder player or a list of placeholder players.
         Args:
@@ -2205,10 +2226,18 @@ class Player:
             >>> print(players)
             [placeholder0, placeholder1, placeholder2]
         """
-        if num == 1:
-            return Player("placeholder")
+        return Player(name)
+
+    @classmethod
+    def placeholders(cls, num: int, names: list[str] = []) -> list[Player]:
         
-        return [Player("placeholder"+str(i)) for i in range(num)]
+        if not names:
+            names = [f"placeholder_{i+1}" for i in range(num)]
+
+        if len(names) != num:
+            raise ValueError("names must have the same lenght as num")
+        
+        return [Player.placeholder(name) for name in names]
 
     def set_debt(self) -> None:
         """
@@ -2241,7 +2270,7 @@ class Player:
             >>> player.is_hand_empty
             True
         """
-        return self.hand.is_empty
+        return not bool(self.hand.cards)
 
     
 
@@ -2298,7 +2327,7 @@ class PlayedCard(Card):
 
         return f"{self.order}) {super().__repr__()} from {self.player.name}"
 
-    def __eq__(self, other: PlayedCard) -> bool:
+    def __eq__(self, other: object) -> bool:
         """
         Check if the played card is equal to another played card.
         Args:
@@ -2311,9 +2340,11 @@ class PlayedCard(Card):
             >>> card_1 == card_2
             True
         """
-        return self.card == other.card
+        if isinstance(other, PlayedCard):
+            return self.seed == other.seed and self.number == other.number and self.order == other.order and self.player == other.player
+        return NotImplemented
         
-    def __ne__(self, other: PlayedCard) -> bool:
+    def __ne__(self, other: object) -> bool:
         """
         Check if the played card is not equal to another played card.
         Args:
@@ -2328,7 +2359,7 @@ class PlayedCard(Card):
         """
         return not self.__eq__(other)
 
-    def __lt__(self, other: PlayedCard) -> bool:
+    def __lt__(self, other: Card) -> bool:
         """
         Check if the played card is less than another played card.
         Args:
@@ -2342,30 +2373,33 @@ class PlayedCard(Card):
             True
         """
 
+        if not isinstance(other, PlayedCard):
+            return NotImplemented
+
         if self == other: #if the cards are the same
             return False
 
         if self.number == 0 or other.number == 0: #if one of the cards is the fool
-            return self.number < other.number 
+            return self.number == 0
 
         if self.seed == Seed.tarots: #if self is a tarots card
-            return self.card < other.card
+            return other.seed != Seed.tarots or self.number < other.number
 
         if other.seed == Seed.tarots: #if the other card is a tarots card and self is not
-            return True 
+            return False 
 
         if self.seed != other.seed: #if the second card is not the same seed as the first
-            return self.order < other.order
+            return self.number < other.number
 
         if self.number > 10 or other.number > 10: #if the card is a figure
             return self.number < other.number
 
         if self.seed in [Seed.cups, Seed.coins]: #if the seed is cups or coins
-            return self.number < other.number
+            return self.number > other.number
         
-        return self.number > other.number #check the higher number
+        return self.number < other.number #check the higher number
                
-    def __le__(self, other: PlayedCard) -> bool:
+    def __le__(self, other: Card) -> bool:
         """
         Check if the played card is less than or equal to another played card.
         Args:
@@ -2379,7 +2413,7 @@ class PlayedCard(Card):
         """
         return self.__lt__(other) or self.__eq__(other)
 
-    def __gt__(self, other: PlayedCard) -> bool:
+    def __gt__(self, other: Card) -> bool:
         """
         Check if the played card is greater than another played card.
         Args:
@@ -2395,7 +2429,7 @@ class PlayedCard(Card):
 
         return not self.__le__(other)
 
-    def __ge__(self, other: PlayedCard) -> bool:
+    def __ge__(self, other: Card) -> bool:
         """
         Check if the played card is greater than or equal to another played card.
         Args:
@@ -2434,7 +2468,7 @@ class PlayedCard(Card):
         return PlayedCard(card.seed, card.number, order, owner)
 
     @classmethod
-    def random(cls,maxOrder: int) -> PlayedCard:
+    def random(cls) -> PlayedCard:
         """
         Create a random PlayedCard.
         Args:
@@ -2448,8 +2482,9 @@ class PlayedCard(Card):
         """
 
         card = Card.random()
-        order = rnd.randint(0,maxOrder)
-        return PlayedCard(card.seed, card.number, order, Player.placeholder())
+        order = rnd.randint(0, 100)
+        player = Player.placeholder()
+        return PlayedCard(card.seed, card.number, order, player)
 
     @classmethod
     def from_cards(cls, cards: List[Card], players: List[Player]) -> List[PlayedCard]:
@@ -2467,7 +2502,7 @@ class PlayedCard(Card):
             >>> print(played_cards)
             ['0) 1 of spades from Alice', '1) 13 of cups from Bob']
         """
-        return [PlayedCard.from_card(card, i, Player) for i, card in enumerate(zip(cards,players))]
+        return [PlayedCard.from_card(card, i, player) for i, (card, player) in enumerate(zip(cards, players))]
 
     @property
     def card(self) -> Card:
@@ -2583,6 +2618,18 @@ class CardRound:
         """
         return CardRound([])
     
+    @property
+    def is_empty(self) -> bool:
+        """
+        Check if the card round is empty.
+        Returns:
+            bool: True if the card round is empty, False otherwise.
+        Example:
+            >>> card_round = CardRound.empty()
+            >>> card_round.is_empty()
+            True
+        """
+        return not bool(self.played_cards)
 
     @classmethod
     def from_cards(cls, cards: List[Card], players: List[Player]) -> CardRound:
@@ -2617,7 +2664,7 @@ class CardRound:
             '0) 1 of spades from placeholder\n1) 1 of spades from placeholder\n2) 1 of spades from placeholder\n'
         """
 
-        return CardRound([PlayedCard.random(i) for i in range(num)])
+        return CardRound([PlayedCard.random() for _ in range(num)])
 
     @property
     def winner_played_card(self) -> PlayedCard:
@@ -2809,7 +2856,7 @@ class CardRound:
             '0) 13 of cups from Bob\n1) 1 of spades from Alice\n'
         """
 
-        return CardRound(reversed(self.played_cards))
+        return CardRound(list(reversed(self.played_cards)))
     
     @property
     def ordered(self) -> CardRound:
@@ -2850,6 +2897,9 @@ class CardRound:
             'spades'
         """
 
+        if self.is_empty:
+            raise ValueError("No cards in the round")
+        
         return self.played_cards[0].seed
 
     def put_card_into_play(self, played_card: PlayedCard) -> bool:
@@ -2878,15 +2928,15 @@ class CardRound:
         card = played_card.card
         player = played_card.player
 
-        if self == False: #if the card round is empty
+        if self.is_empty: #if the card round is empty
             player.hand.remove_card(card) #remove the card from the player's hand
             self.add_card(played_card) #add the card to the card round
             return True
 
 
         if card.seed != self.seed: #if the card is not of the same seed as the round
-            if player.has_seed(round.seed): #if the player has cards of the same seed as the round
-                print(f"Card must be of the {round.seed} seed")
+            if player.has_seed(self.seed): #if the player has cards of the same seed as the round
+                print(f"Card must be of the {self.seed} seed")
                 return False
             if player.has_seed(Seed.tarots): #if the player has tarots cards
                 print(f"{self.seed} cards finished, card must be a tarot")
@@ -3004,7 +3054,7 @@ class Team:
         return f"the team is composed of:\n{self.players}"
 
     def __bool__(self) -> bool:
-        return self.players
+        return bool(self.players)
     
     def __len__(self) -> int:
         return len(self.players)
@@ -3025,6 +3075,11 @@ class Team:
     def empty(cls) -> Team:
         """Return an empty team"""
         return Team([])
+
+    @property
+    def is_empty(self)->bool:
+        """Checks if the list of players is empty or not"""
+        return bool(self.players)
 
     def add_card(self, card: Card) -> None:
         """
@@ -3211,12 +3266,7 @@ class Team:
             >>> print(team)
             'the team is composed of:\nAlice'
         """
-        print(f"player to remove {player}")
-        print(f"players in team {self.players}")
         self.players.remove(player)
-        print(f"players in team {self.players}")
-
-        return None
 
     def remove_players(self, players: List[Player]) -> None:
         """
@@ -3530,6 +3580,8 @@ class Game:
         for player in self.players:
             if player.has_card(card):
                 return player
+        
+        raise ValueError("No player found")
 
     def str_teams(self) -> str:
         """
@@ -3647,9 +3699,14 @@ class Game:
         self.empty_teams()
 
         player = self.asking_player  #get the current player
-        requested_card = player.choose_card()   #choose a card
+        available_cards = [card for card in Deck.standard() if (card.value == 13 and not player.has_card(card))]
+
+        if len(available_cards) != 1: #there is not only the hermit
+            available_cards.remove(Card(Seed.tarots, 1))
+
+        requested_card = player.choose_card(available_cards)   #choose a card
         while requested_card.value != 13 or requested_card in player.hand: 
-            requested_card = player.choose_card()
+            requested_card = player.choose_card(available_cards)
 
         if self.prize.has_card(requested_card): #if the prize has the card
             self.assign_prize()
@@ -3662,21 +3719,18 @@ class Game:
         player_with_card = self.find_card_owner(requested_card) #find who has the requested card
 
         asking_team = Team([self.asking_player,player_with_card])
-
+        
+        opposing_teams: list[Team] = []
         if self.num_players == 4: #if there are 4 players
-            opposing_teams: list[Team] = []
             for player_i in self.non_asking_players:
                 opposing_teams.append(Team([player_i]))
         else:
-            opposing_teams = Team([player_i for player_i in self.players if player_i not in asking_team])
+            opposing_teams.append(Team([player_i for player_i in self.players if player_i not in asking_team]))
         
         self.add_team(asking_team) #assign the teams
         self.add_teams(opposing_teams)
 
-        card_to_exchange = player.choose_card() 
-        while card_to_exchange not in player.hand:
-            card_to_exchange = player.choose_card()
-
+        card_to_exchange = player.choose_own_card() 
 
         Player.exchange_cards(player, player_with_card, card_to_exchange, requested_card)
 
@@ -3772,10 +3826,10 @@ class Game:
 
         player = self.asking_player
 
+
+
         for _ in range(prize_size):
-            card = player.choose_card()
-            while card not in player.hand:
-                card = player.choose_card()
+            card = player.choose_own_card_for_prize()
             player.remove_card(card)
             player.add_won_card(card)
 
@@ -3974,10 +4028,10 @@ class Game:
 
         round = CardRound.empty()
 
-        for player in self.players: 
+        for idx, player in enumerate(self.players): 
             played = False 
             while not played: #check if the player has played
-                card = PlayedCard.from_card(player.choose_own_card(), player) #choose a card
+                card = PlayedCard.from_card(player.choose_own_card(), idx, player) #choose a card
                 played = round.put_card_into_play(card) #put the card into play
 
         self.rounds.append(round)
@@ -4094,6 +4148,7 @@ class Game:
         for team in self.teams:
             if team.has_player(player):
                 return team
+        raise ValueError("No Team found")
 
     @classmethod
     def placeholder(cls, num_players:int = 3) -> Game:
@@ -4109,7 +4164,7 @@ class Game:
             'Players: [Alice, Bob, Charlie]\nAsking player = Alice\nDealer = Charlie\nTeams: []\nCurrent Player: Alice\n'
         """
 
-        return Game(Player.placeholder(num_players))    
+        return Game(Player.placeholders(num_players))    
 
     def player_position(self, player: Player) -> int:
         """

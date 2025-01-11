@@ -1,1 +1,2 @@
-#here the gui someday sometime
+import pygame
+from pygame.locals import *
