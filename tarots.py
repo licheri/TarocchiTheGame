@@ -3513,9 +3513,6 @@ class Game:
 
         self.players.append(self.players.pop(0))
 
-    def advance_cycle(self) -> None:
-        next(self.cycle_player)
-
     def find_card_owner(self, card: Card) -> Player:
         """
         Find the player who has a specific card.
